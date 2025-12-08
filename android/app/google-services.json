@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "192932677251",
+    "project_id": "aryaportfolio-5c33f",
+    "storage_bucket": "aryaportfolio-5c33f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:192932677251:android:b66ca4f7b3281cf4ec7db6",
+        "android_client_info": {
+          "package_name": "com.example.imgwebsite"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB2l_EnUKYScATbs8-FVLtjPCIB2f_IHPk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:192932677251:android:b9ba4ca93a9093e4ec7db6",
+        "android_client_info": {
+          "package_name": "com.example.thottathil_silks"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB2l_EnUKYScATbs8-FVLtjPCIB2f_IHPk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
