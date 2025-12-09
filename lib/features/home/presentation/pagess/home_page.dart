@@ -11,9 +11,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart' as Firebase;
 
 import '../../../../core/constants/colour_constants.dart';
-import '../../../login/presentation/login_page.dart';
 import '../../data/model/product_model.dart';
-import 'product_detail_page.dart'; // Add this import
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -1012,9 +1010,22 @@ class _HomePageState extends State<HomePage> {
                       }
                     },
                   ),
-                  const SizedBox(height: 24),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 800),
+                  const SizedBox(height: 32),
+                  // Beautiful Search and Filter Section
+                  Container(
+                    constraints: const BoxConstraints(maxWidth: 900),
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: WebColours.whiteColor,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 20,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
                     child: LayoutBuilder(
                       builder: (context, constraints) {
                         final isMobile = constraints.maxWidth < 600;
@@ -1023,147 +1034,103 @@ class _HomePageState extends State<HomePage> {
                           // Mobile: Stack vertically
                           return Column(
                             children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: TextField(
-                                      controller: _searchController,
-                                      decoration: InputDecoration(
-                                        hintText: 'Search with product name and code ..',
-                                        border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(0),
-                                          borderSide: BorderSide(color:WebColours.grayColour400 ),
-                                        ),
-                                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                                        suffixIcon: _searchQuery.isNotEmpty
-                                            ? IconButton(
-                                                icon: const Icon(Icons.clear),
-                                                onPressed: _clearSearch,
-                                              )
-                                            : null,
-                                      ),
-                                      onSubmitted: (_) => _performSearch(),
-                                    ),
+                              // Search Section
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: WebColours.grayColour100,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: WebColours.grayColour300,
+                                    width: 1,
                                   ),
-                                  const SizedBox(width: 8),
-                                  OutlinedButton(
-                                    onPressed: _performSearch,
-                                    style: OutlinedButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                                      side: const BorderSide(color: WebColours.primaryColor, width: 2),
-                                      foregroundColor:  WebColours.primaryColor,
-                                    ),
-                                    child: const Text('Search', style: TextStyle(letterSpacing: 1.5)),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 16),
-                              Row(
-                                children: [
-                                  Text(
-                                    'Filter by:',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      color: WebColours.grayColour700,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: WebColours.whiteColor,
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                          color: WebColours.grayColour300,
-                                          width: 1,
-                                        ),
-                                      ),
-                                      child: DropdownButton<String>(
-                                        value: _selectedFilter,
-                                        isExpanded: true,
-                                        underline: const SizedBox(),
-                                        icon: Icon(
-                                          Icons.arrow_drop_down,
-                                          color: WebColours.primaryColor,
-                                        ),
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: WebColours.primaryColor,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                        items: ['All Products', 'This Month', 'This Week']
-                                            .map((String value) {
-                                          return DropdownMenuItem<String>(
-                                            value: value,
-                                            child: Text(value),
-                                          );
-                                        }).toList(),
-                                        onChanged: (String? newValue) {
-                                          if (newValue != null) {
-                                            setState(() {
-                                              _selectedFilter = newValue;
-                                              _filteredProducts = _filteredProductsByPeriod;
-                                            });
-                                          }
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          );
-                        } else {
-                          // Desktop: Arrange horizontally
-                          return Row(
-                            children: [
-                              Expanded(
+                                ),
                                 child: TextField(
                                   controller: _searchController,
                                   decoration: InputDecoration(
-                                    hintText: 'Search with product name and code ..',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(0),
-                                      borderSide: BorderSide(color:WebColours.grayColour400 ),
+                                    hintText: 'Search products by name, code, category...',
+                                    hintStyle: TextStyle(
+                                      color: WebColours.grayColour600,
+                                      fontSize: 14,
                                     ),
-                                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                    prefixIcon: Icon(
+                                      Icons.search,
+                                      color: WebColours.primaryColor,
+                                      size: 24,
+                                    ),
                                     suffixIcon: _searchQuery.isNotEmpty
                                         ? IconButton(
-                                            icon: const Icon(Icons.clear),
+                                            icon: Icon(
+                                              Icons.clear,
+                                              color: WebColours.grayColour600,
+                                              size: 20,
+                                            ),
                                             onPressed: _clearSearch,
                                           )
                                         : null,
+                                    border: InputBorder.none,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 16,
+                                    ),
                                   ),
                                   onSubmitted: (_) => _performSearch(),
                                 ),
                               ),
-                              const SizedBox(width: 16),
-                              OutlinedButton(
-                                onPressed: _performSearch,
-                                style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                                  side: const BorderSide(color: WebColours.primaryColor, width: 2),
-                                  foregroundColor:  WebColours.primaryColor,
+                              const SizedBox(height: 16),
+                              // Search Button
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton.icon(
+                                  onPressed: _performSearch,
+                                  icon: const Icon(Icons.search, size: 20),
+                                  label: const Text(
+                                    'Search',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: WebColours.primaryColor,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    elevation: 2,
+                                  ),
                                 ),
-                                child: const Text('Search', style: TextStyle(letterSpacing: 1.5)),
                               ),
-                              const SizedBox(width: 16),
-                              Text(
-                                'Filter by:',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: WebColours.grayColour700,
-                                ),
+                              const SizedBox(height: 20),
+                              Divider(color: WebColours.grayColour300, height: 1),
+                              const SizedBox(height: 20),
+                              // Filter Section
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.filter_list,
+                                    color: WebColours.primaryColor,
+                                    size: 22,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'Filter by:',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: WebColours.grayColour700,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: 12),
+                              const SizedBox(height: 12),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: WebColours.whiteColor,
-                                  borderRadius: BorderRadius.circular(8),
+                                  color: WebColours.grayColour100,
+                                  borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                     color: WebColours.grayColour300,
                                     width: 1,
@@ -1171,13 +1138,15 @@ class _HomePageState extends State<HomePage> {
                                 ),
                                 child: DropdownButton<String>(
                                   value: _selectedFilter,
+                                  isExpanded: true,
                                   underline: const SizedBox(),
                                   icon: Icon(
                                     Icons.arrow_drop_down,
                                     color: WebColours.primaryColor,
+                                    size: 28,
                                   ),
                                   style: TextStyle(
-                                    fontSize: 14,
+                                    fontSize: 15,
                                     color: WebColours.primaryColor,
                                     fontWeight: FontWeight.w500,
                                   ),
@@ -1197,6 +1166,151 @@ class _HomePageState extends State<HomePage> {
                                     }
                                   },
                                 ),
+                              ),
+                            ],
+                          );
+                        } else {
+                          // Desktop: Arrange horizontally
+                          return Row(
+                            children: [
+                              // Search Field
+                              Expanded(
+                                flex: 3,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: WebColours.grayColour100,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: WebColours.grayColour300,
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: TextField(
+                                    controller: _searchController,
+                                    decoration: InputDecoration(
+                                      hintText: 'Search products by name, code, category, price...',
+                                      hintStyle: TextStyle(
+                                        color: WebColours.grayColour600,
+                                        fontSize: 14,
+                                      ),
+                                      prefixIcon: Icon(
+                                        Icons.search,
+                                        color: WebColours.primaryColor,
+                                        size: 24,
+                                      ),
+                                      suffixIcon: _searchQuery.isNotEmpty
+                                          ? IconButton(
+                                              icon: Icon(
+                                                Icons.clear,
+                                                color: WebColours.grayColour600,
+                                                size: 20,
+                                              ),
+                                              onPressed: _clearSearch,
+                                            )
+                                          : null,
+                                      border: InputBorder.none,
+                                      contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 16,
+                                      ),
+                                    ),
+                                    onSubmitted: (_) => _performSearch(),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              // Search Button
+                              ElevatedButton.icon(
+                                onPressed: _performSearch,
+                                icon: const Icon(Icons.search, size: 20),
+                                label: const Text(
+                                  'Search',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: WebColours.primaryColor,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 32,
+                                    vertical: 16,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  elevation: 2,
+                                ),
+                              ),
+                              const SizedBox(width: 20),
+                              // Divider
+                              Container(
+                                width: 1,
+                                height: 40,
+                                color: WebColours.grayColour300,
+                              ),
+                              const SizedBox(width: 20),
+                              // Filter Section
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.filter_list,
+                                    color: WebColours.primaryColor,
+                                    size: 22,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'Filter:',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: WebColours.grayColour700,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: WebColours.grayColour100,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: WebColours.grayColour300,
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: DropdownButton<String>(
+                                      value: _selectedFilter,
+                                      underline: const SizedBox(),
+                                      icon: Icon(
+                                        Icons.arrow_drop_down,
+                                        color: WebColours.primaryColor,
+                                        size: 28,
+                                      ),
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        color: WebColours.primaryColor,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      items: ['All Products', 'This Month', 'This Week']
+                                          .map((String value) {
+                                        return DropdownMenuItem<String>(
+                                          value: value,
+                                          child: Text(value),
+                                        );
+                                      }).toList(),
+                                      onChanged: (String? newValue) {
+                                        if (newValue != null) {
+                                          setState(() {
+                                            _selectedFilter = newValue;
+                                            _filteredProducts = _filteredProductsByPeriod;
+                                          });
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           );
@@ -1264,11 +1378,10 @@ class _HomePageState extends State<HomePage> {
                                     final product = _filteredProducts[index];
                                     return GestureDetector(
                                       onTap: () {
-                                        Navigator.push(
+                                        Navigator.pushNamed(
                                           context,
-                                          MaterialPageRoute(
-                                            builder: (context) => ProductDetailPage(product: product),
-                                          ),
+                                          '/product',
+                                          arguments: {'product': product},
                                         );
                                       },
                                       child: Column(
@@ -1716,9 +1829,8 @@ class _HomePageState extends State<HomePage> {
   Future<void> _handleLogout() async {
     try {
       await _auth.signOut();
-      // Navigation will be handled automatically by StreamBuilder in main.dart
       if (mounted) {
-        Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => LoginPage()), (route) => false);
+        Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
 
         ScaffoldMessenger.of(context).showSnackBar(
            SnackBar(

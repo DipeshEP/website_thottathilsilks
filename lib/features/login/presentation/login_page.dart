@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../core/constants/colour_constants.dart';
-import '../../home/presentation/pagess/home_page.dart';
 
 
 
@@ -64,9 +63,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
         // Login success → navigate
         if (mounted) {
-          Navigator.pushAndRemoveUntil(
+          Navigator.pushNamedAndRemoveUntil(
             context,
-            MaterialPageRoute(builder: (_) => const HomePage()),
+            '/home',
             (route) => false,
           );
 
@@ -178,8 +177,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              WebColours.gradientStart.withOpacity(0.1),
-              WebColours.gradientEnd.withOpacity(0.1),
+              WebColours.gradientStart,
+              WebColours.gradientEnd,
               WebColours.scaffoldBackgroundColor,
             ],
           ),
@@ -215,8 +214,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(20),
-                                  child: Image.network(
-                                    'https://via.placeholder.com/300x300/000000/FFFFFF?text=Thottathil+Silks',
+                                  child: Image.asset(
+                                    'assets/images/IMG_3859-removebg-preview.png',
                                     fit: BoxFit.contain,
                                     errorBuilder: (context, error, stackTrace) {
                                       return Container(
