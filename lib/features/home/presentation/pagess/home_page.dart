@@ -109,7 +109,24 @@ class _HomePageState extends State<HomePage> {
         }).whereType<Product>().toList();
         
         // Sort products by last update date (newest first)
-        _allProducts.sort((a, b) => b.lastUpdate.createdDate.compareTo(a.lastUpdate.createdDate));
+        // Products with invalid dates (year 1970) will be sorted to the end
+        _allProducts.sort((a, b) {
+          final dateA = a.lastUpdate.createdDate;
+          final dateB = b.lastUpdate.createdDate;
+          
+          // Handle invalid dates - put them at the end
+          final aInvalid = dateA.year == 1970;
+          final bInvalid = dateB.year == 1970;
+          
+          if (aInvalid && bInvalid) return 0; // Both invalid, keep order
+          if (aInvalid) return 1; // A invalid, put it after B
+          if (bInvalid) return -1; // B invalid, put it after A
+          
+          // Both valid, sort by date (newest first)
+          // Negative means a comes before b, positive means a comes after b
+          // For newest first: if dateA is newer (greater), a should come before b (return negative)
+          return dateA.compareTo(dateB) * -1; // Reverse to get newest first
+        });
         
         _filteredProducts = _filteredProductsByPeriod;
         _isLoadingProducts = false;
@@ -321,21 +338,109 @@ class _HomePageState extends State<HomePage> {
   void _showAddProductDialog() {
     showDialog(
       context: context,
+      barrierColor: Colors.black.withOpacity(0.5),
       builder: (BuildContext context) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            return AlertDialog(
-              title: const Text('Add New Product'),
-              content: SingleChildScrollView(
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              elevation: 0,
+              backgroundColor: Colors.transparent,
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 600, maxHeight: 700),
+                decoration: BoxDecoration(
+                  color: WebColours.whiteColor,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Product Image
-                    const Text(
-                      'Product Image *',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                    // Header with gradient
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [WebColours.gradientStart, WebColours.gradientEnd],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(20),
+                          topRight: Radius.circular(20),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.add_circle_outline,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          const Expanded(
+                            child: Text(
+                              'Add New Product',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close, color: Colors.white),
+                            onPressed: () {
+                              _clearAllFields();
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ],
+                      ),
                     ),
+                    // Content
+                    Flexible(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Product Image
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.image,
+                                  size: 18,
+                                  color: WebColours.primaryColor,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Product Image *',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: WebColours.primaryColor,
+                                  ),
+                                ),
+                              ],
+                            ),
                     const SizedBox(height: 8),
                     GestureDetector(
                       onTap: () async {
@@ -373,13 +478,27 @@ class _HomePageState extends State<HomePage> {
                                   ),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    
-                    // Product Name
-                    const Text(
-                      'Product Name *',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                    ),
+                            const SizedBox(height: 16),
+                            
+                            // Product Name
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.inventory_2,
+                                  size: 18,
+                                  color: WebColours.primaryColor,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Product Name *',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: WebColours.primaryColor,
+                                  ),
+                                ),
+                              ],
+                            ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: _nameController,
@@ -402,13 +521,27 @@ class _HomePageState extends State<HomePage> {
                         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    
-                    // Product Code
-                    const Text(
-                      'Product Code *',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                    ),
+                            const SizedBox(height: 16),
+                            
+                            // Product Code
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.qr_code,
+                                  size: 18,
+                                  color: WebColours.primaryColor,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Product Code *',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: WebColours.primaryColor,
+                                  ),
+                                ),
+                              ],
+                            ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: _productCodeController,
@@ -431,19 +564,33 @@ class _HomePageState extends State<HomePage> {
                         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    
-                    // Size and Quantity Row
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Size *',
-                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                              ),
+                            const SizedBox(height: 16),
+                            
+                            // Size and Quantity Row
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.straighten,
+                                            size: 18,
+                                            color: WebColours.primaryColor,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          const Text(
+                                            'Size *',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                              color: WebColours.primaryColor,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                               const SizedBox(height: 8),
                               TextField(
                                 controller: _sizeController,
@@ -469,15 +616,29 @@ class _HomePageState extends State<HomePage> {
                             ],
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Quantity *',
-                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                              ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.numbers,
+                                            size: 18,
+                                            color: WebColours.primaryColor,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          const Text(
+                                            'Quantity *',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                              color: WebColours.primaryColor,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                               const SizedBox(height: 8),
                               TextField(
                                 controller: _quantityController,
@@ -506,13 +667,27 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    
-                    // Price
-                    const Text(
-                      'Price *',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                    ),
+                            const SizedBox(height: 16),
+                            
+                            // Price
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.currency_rupee,
+                                  size: 18,
+                                  color: WebColours.primaryColor,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Price *',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: WebColours.primaryColor,
+                                  ),
+                                ),
+                              ],
+                            ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: _priceController,
@@ -536,87 +711,129 @@ class _HomePageState extends State<HomePage> {
                         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    
-                    // Category and Supplier Row
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Category *',
-                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                              ),
-                              const SizedBox(height: 8),
-                              TextField(
-                                controller: _categoryController,
-                                decoration: InputDecoration(
-                                  hintText: 'Select category',
-                                  filled: true,
-                                  fillColor: WebColours.grayColour100,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: BorderSide(color: WebColours.grayColour300),
+                            const SizedBox(height: 16),
+                            
+                            // Category and Supplier Row
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.category,
+                                            size: 18,
+                                            color: WebColours.primaryColor,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          const Text(
+                                            'Category *',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                              color: WebColours.primaryColor,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      TextField(
+                                        controller: _categoryController,
+                                        decoration: InputDecoration(
+                                          hintText: 'Select category',
+                                          filled: true,
+                                          fillColor: WebColours.grayColour100,
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                            borderSide: BorderSide(color: WebColours.grayColour300),
+                                          ),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                            borderSide: BorderSide(color: WebColours.grayColour300),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                            borderSide: const BorderSide(color: WebColours.primaryColor, width: 2),
+                                          ),
+                                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: BorderSide(color: WebColours.grayColour300),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: WebColours.primaryColor, width: 2),
-                                  ),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Supplier *',
-                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                              ),
-                              const SizedBox(height: 8),
-                              TextField(
-                                controller: _supplierController,
-                                decoration: InputDecoration(
-                                  hintText: 'Enter supplier name',
-                                  filled: true,
-                                  fillColor: WebColours.grayColour100,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: BorderSide(color: WebColours.grayColour300),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.local_shipping,
+                                            size: 18,
+                                            color: WebColours.primaryColor,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          const Text(
+                                            'Supplier *',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                              color: WebColours.primaryColor,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      TextField(
+                                        controller: _supplierController,
+                                        decoration: InputDecoration(
+                                          hintText: 'Enter supplier name',
+                                          filled: true,
+                                          fillColor: WebColours.grayColour100,
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                            borderSide: BorderSide(color: WebColours.grayColour300),
+                                          ),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                            borderSide: BorderSide(color: WebColours.grayColour300),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                            borderSide: const BorderSide(color: WebColours.primaryColor, width: 2),
+                                          ),
+                                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: BorderSide(color: WebColours.grayColour300),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: const BorderSide(color: WebColours.primaryColor, width: 2),
-                                  ),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    // Description
-                    const Text(
-                      'Description *',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                    ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            
+                            // Description
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.description,
+                                  size: 18,
+                                  color: WebColours.primaryColor,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Description *',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: WebColours.primaryColor,
+                                  ),
+                                ),
+                              ],
+                            ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: _descriptionController,
@@ -639,51 +856,88 @@ class _HomePageState extends State<HomePage> {
                         ),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                       ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    // Footer with buttons
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: WebColours.grayColour100,
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(20),
+                          bottomRight: Radius.circular(20),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () {
+                              _clearAllFields();
+                              Navigator.of(context).pop();
+                            },
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                side: BorderSide(color: WebColours.grayColour300),
+                              ),
+                            ),
+                            child: Text(
+                              'CANCEL',
+                              style: TextStyle(
+                                color: WebColours.grayColour700,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: WebColours.buttonColour,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              elevation: 2,
+                            ),
+                            onPressed: _isLoading ? null : () => _submitForm(context),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(WebColours.whiteColor),
+                                    ),
+                                  )
+                                : Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.add_circle, size: 20),
+                                      const SizedBox(width: 8),
+                                      const Text(
+                                        'ADD PRODUCT',
+                                        style: TextStyle(
+                                          color: WebColours.whiteColor,
+                                          fontWeight: FontWeight.w600,
+                                          letterSpacing: 1.2,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
-              // BUTTONS
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    _clearAllFields();
-                    Navigator.of(context).pop();
-                  },
-                  child: Text(
-                    'CANCEL',
-                    style: TextStyle(
-                      color: WebColours.grayColour700,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: WebColours.buttonColour,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  ),
-                  onPressed: _isLoading ? null : () => _submitForm(context),
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(WebColours.whiteColor),
-                          ),
-                        )
-                      : const Text(
-                          'ADD PRODUCT',
-                          style: TextStyle(
-                            color: WebColours.whiteColor,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                ),
-              ],
             );
           },
         );
@@ -728,15 +982,27 @@ class _HomePageState extends State<HomePage> {
     List<Product> periodFiltered;
     switch (_selectedFilter) {
       case 'This Week':
-        final oneWeekAgo = now.subtract(const Duration(days: 7));
         periodFiltered = _allProducts
-            .where((product) => product.createdDetails.createdDate.isAfter(oneWeekAgo))
+            .where((product) {
+              final createdDate = product.createdDetails.createdDate;
+              // Exclude products with invalid dates
+              if (createdDate.year == 1970) return false;
+              // Check if product was created within the last 7 days
+              final daysDifference = now.difference(createdDate).inDays;
+              return daysDifference <= 7 && daysDifference >= 0;
+            })
             .toList();
         break;
       case 'This Month':
-        final oneMonthAgo = now.subtract(const Duration(days: 30));
         periodFiltered = _allProducts
-            .where((product) => product.createdDetails.createdDate.isAfter(oneMonthAgo))
+            .where((product) {
+              final createdDate = product.createdDetails.createdDate;
+              // Exclude products with invalid dates
+              if (createdDate.year == 1970) return false;
+              // Check if product was created within the last 30 days
+              final daysDifference = now.difference(createdDate).inDays;
+              return daysDifference <= 30 && daysDifference >= 0;
+            })
             .toList();
         break;
       case 'All Products':
@@ -791,16 +1057,30 @@ class _HomePageState extends State<HomePage> {
   }
 
   double get _oneMonthAddedProductPrice {
-    final oneMonthAgo = DateTime.now().subtract(const Duration(days: 30));
+    final now = DateTime.now();
     return _allProducts
-        .where((product) => product.createdDetails.createdDate.isAfter(oneMonthAgo))
+        .where((product) {
+          final createdDate = product.createdDetails.createdDate;
+          // Exclude products with invalid dates (DateTime(1970) is the default for parsing errors)
+          if (createdDate.year == 1970) return false;
+          // Check if product was created within the last 30 days (not in the future)
+          final daysDifference = now.difference(createdDate).inDays;
+          return daysDifference <= 30 && daysDifference >= 0;
+        })
         .fold(0.0, (sum, product) => sum + product.price);
   }
 
   int get _oneMonthAddedProductCount {
-    final oneMonthAgo = DateTime.now().subtract(const Duration(days: 30));
+    final now = DateTime.now();
     return _allProducts
-        .where((product) => product.createdDetails.createdDate.isAfter(oneMonthAgo))
+        .where((product) {
+          final createdDate = product.createdDetails.createdDate;
+          // Exclude products with invalid dates
+          if (createdDate.year == 1970) return false;
+          // Check if product was created within the last 30 days
+          final daysDifference = now.difference(createdDate).inDays;
+          return daysDifference <= 30 && daysDifference >= 0;
+        })
         .length;
   }
 
@@ -1377,12 +1657,16 @@ class _HomePageState extends State<HomePage> {
                                   itemBuilder: (context, index) {
                                     final product = _filteredProducts[index];
                                     return GestureDetector(
-                                      onTap: () {
-                                        Navigator.pushNamed(
+                                      onTap: () async {
+                                        final result = await Navigator.pushNamed(
                                           context,
                                           '/product',
                                           arguments: {'product': product},
                                         );
+                                        // Refresh products if product was updated or deleted
+                                        if (result == true && mounted) {
+                                          getAllProducts();
+                                        }
                                       },
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.center,

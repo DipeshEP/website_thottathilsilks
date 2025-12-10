@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../../core/constants/colour_constants.dart';
 import '../../data/model/product_model.dart';
+import 'edit_product_page.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final Product product;
@@ -18,6 +20,9 @@ class ProductDetailPage extends StatefulWidget {
 class _ProductDetailPageState extends State<ProductDetailPage> {
   int selectedImageIndex = 0;
   bool isLiked = false;
+  bool _isDeleting = false;
+  
+  FirebaseFirestore get _firestore => FirebaseFirestore.instance;
 
   List<String> get productImages {
     if (widget.product.images.isNotEmpty) {
@@ -271,91 +276,67 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           ),
         ),
         const SizedBox(height: 32),
-        // Action Buttons
-        // Row(
-        //   children: [
-        //     Expanded(
-        //       child: ElevatedButton(
-        //         onPressed: () {
-        //           // Add to cart functionality
-        //         },
-        //         style: ElevatedButton.styleFrom(
-        //           backgroundColor: WebColours.buttonColour,
-        //           foregroundColor: WebColours.whiteColor,
-        //           padding: const EdgeInsets.symmetric(vertical: 20),
-        //           shape: RoundedRectangleBorder(
-        //             borderRadius: BorderRadius.circular(8),
-        //           ),
-        //           elevation: 4,
-        //         ),
-        //         child: const Text(
-        //           'ADD TO CART',
-        //           style: TextStyle(
-        //             fontSize: 14,
-        //             fontWeight: FontWeight.w600,
-        //             letterSpacing: 1.5,
-        //           ),
-        //         ),
-        //       ),
-        //     ),
-        //     const SizedBox(width: 12),
-        //     Container(
-        //       decoration: BoxDecoration(
-        //         border: Border.all(
-        //           color: isLiked ? Colors.red : WebColours.grayColour300,
-        //           width: 2,
-        //         ),
-        //         borderRadius: BorderRadius.circular(8),
-        //         color: isLiked ? Colors.red.withOpacity(0.1) : null,
-        //       ),
-        //       child: IconButton(
-        //         icon: Icon(
-        //           isLiked ? Icons.favorite : Icons.favorite_border,
-        //           color: isLiked ? Colors.red : WebColours.grayColour600,
-        //         ),
-        //         onPressed: () {
-        //           setState(() {
-        //             isLiked = !isLiked;
-        //           });
-        //         },
-        //       ),
-        //     ),
-        //   ],
-        // ),
-        // const SizedBox(height: 24),
-        // Additional Info
-        // Container(
-        //   decoration: BoxDecoration(
-        //     gradient: const LinearGradient(
-        //       colors: [WebColours.gradientStart, WebColours.gradientEnd],
-        //       begin: Alignment.centerLeft,
-        //       end: Alignment.centerRight,
-        //     ),
-        //     borderRadius: BorderRadius.circular(8),
-        //   ),
-        //   padding: const EdgeInsets.all(16),
-        //   child: Column(
-        //     crossAxisAlignment: CrossAxisAlignment.start,
-        //     children: const [
-        //       Text(
-        //         'Free Shipping',
-        //         style: TextStyle(
-        //           color: Colors.white,
-        //           fontSize: 14,
-        //           fontWeight: FontWeight.w600,
-        //         ),
-        //       ),
-        //       SizedBox(height: 4),
-        //       Text(
-        //         'On orders over \$100. Delivered in 3-5 business days.',
-        //         style: TextStyle(
-        //           color: Colors.white,
-        //           fontSize: 12,
-        //         ),
-        //       ),
-        //     ],
-        //   ),
-        // ),
+        // Action Buttons - Edit and Delete
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () => _navigateToEditPage(context),
+                icon: const Icon(Icons.edit, size: 18),
+                label: const Text(
+                  'EDIT PRODUCT',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: WebColours.buttonColour,
+                  foregroundColor: WebColours.whiteColor,
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  elevation: 4,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: _isDeleting ? null : () => _showDeleteConfirmation(context),
+                icon: _isDeleting
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Icon(Icons.delete, size: 18),
+                label: Text(
+                  _isDeleting ? 'DELETING...' : 'DELETE PRODUCT',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: WebColours.whiteColor,
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  elevation: 4,
+                ),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -393,5 +374,99 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         ],
       ),
     );
+  }
+
+  void _navigateToEditPage(BuildContext context) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditProductPage(product: widget.product),
+      ),
+    );
+
+    // If product was updated, refresh the detail page
+    if (result == true && mounted) {
+      // Optionally refresh the product data or navigate back
+      Navigator.pop(context, true); // Pass true to indicate product was updated
+    }
+  }
+
+  Future<void> _showDeleteConfirmation(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Product'),
+          content: Text(
+            'Are you sure you want to delete "${widget.product.name}"? This action cannot be undone.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true) {
+      await _deleteProduct(context);
+    }
+  }
+
+  Future<void> _deleteProduct(BuildContext context) async {
+    setState(() {
+      _isDeleting = true;
+    });
+
+    try {
+      // Permanently delete the product from Firestore
+      await _firestore.collection("products").doc(widget.product.id).delete();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Product deleted successfully"),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(10)),
+            ),
+          ),
+        );
+
+        // Navigate back and indicate product was deleted
+        Navigator.pop(context, true);
+      }
+    } catch (e) {
+      print("Delete error: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error deleting product: $e"),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(10)),
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isDeleting = false;
+        });
+      }
+    }
   }
 }

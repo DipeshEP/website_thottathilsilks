@@ -215,7 +215,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(20),
                                   child: Image.asset(
-                                    'assets/images/IMG_3859-removebg-preview.png',
+                                    'assets/images/favicon.png',
                                     fit: BoxFit.contain,
                                     errorBuilder: (context, error, stackTrace) {
                                       return Container(
